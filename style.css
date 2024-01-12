@@ -3,6 +3,90 @@
   margin: 0;
   padding: 0;
   list-style: none;
+  font-family: sans-serif;
+}
+
+body {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+body #calculatorContainer {
+  height: 700px;
+  width: 450px;
+  border-radius: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 4px solid #3d3d3d;
+}
+body #calculatorContainer #calculator {
+  height: 675px;
+  width: 425px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+body #calculatorContainer #calculator #display {
+  height: 25%;
+  background-color: #3d3d3d;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 15px;
+  border-radius: 20px;
+}
+body #calculatorContainer #calculator #display #pastResultsDisplay {
+  font-size: 24px;
+  color: rgba(255, 255, 255, 0.74);
+  flex-grow: 2;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+}
+body #calculatorContainer #calculator #display #inputDisplay {
+  font-size: 80px;
+  flex-grow: 3;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+}
+body #calculatorContainer #calculator #buttons {
+  height: 70%;
+  display: grid;
+  gap: 5px;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+}
+body #calculatorContainer #calculator #buttons > * {
+  font-size: 32px;
+  background-color: #3d3d3d;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  margin: 1px;
+  position: relative;
+}
+body #calculatorContainer #calculator #buttons > *:hover {
+  background-color: white;
+  color: #3d3d3d;
+  border: 1px solid #3d3d3d;
+}
+body #calculatorContainer #calculator #buttons > *:active {
+  top: 2px;
+}
+body #calculatorContainer #calculator #buttons #zero {
+  grid-column: 1/span 2;
+}
+body #calculatorContainer #calculator > * {
+  width: 100%;
+  flex-shrink: 0;
 }
 
 /*# sourceMappingURL=style.css.map */
