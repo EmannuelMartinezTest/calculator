@@ -63,6 +63,7 @@ body #calculatorContainer #calculator #buttons {
   gap: 5px;
   grid-template-columns: repeat(4, 1fr);
   grid-template-rows: repeat(5, 1fr);
+  pointer-events: none;
 }
 body #calculatorContainer #calculator #buttons > * {
   font-size: 32px;
@@ -72,6 +73,7 @@ body #calculatorContainer #calculator #buttons > * {
   border-radius: 20px;
   margin: 1px;
   position: relative;
+  pointer-events: initial;
 }
 body #calculatorContainer #calculator #buttons > *:hover {
   background-color: white;

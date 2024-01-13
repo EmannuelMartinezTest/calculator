@@ -65,6 +65,7 @@ body {
         gap: 5px;
         grid-template-columns: repeat(4, 1fr);
         grid-template-rows: repeat(5, 1fr);
+        pointer-events: none;
 
         & > * {
           font-size: 32px;
@@ -74,6 +75,7 @@ body {
           border-radius: 20px;
           margin: 1px;
           position: relative;
+          pointer-events: initial;
 
           &:hover {
             background-color: white;

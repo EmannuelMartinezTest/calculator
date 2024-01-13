@@ -1,31 +1,155 @@
-/*
-PSEUDO-CODE
+const buttons = document.querySelector<HTMLElement>("#buttons");
+const inputDisplay = document.querySelector<HTMLElement>("#inputDisplay");
+// prettier-ignore
+const historyDisplay = document.querySelector<HTMLElement>("#pastResultsDisplay");
 
-CLICKABLES
-    I want to make all buttons clickable, but have them be accessed by the container evt.target.
-    I have to disable the dot button once it's been clicked once.
-    All numbers plus "." are processed into the inputDisplay
-    If they press "C", I'm only clearing what's on the inputDisplay.
-    If they press "AC", then I have to clear the inputDisplay and pastResultsDisplay, essentially treating it like a
-    reset button
-    If they press "<-", i have to pop the last element from the inputDisplay;
+buttons?.addEventListener("click", processButtons);
 
-    If they click the division, multiply, subtract, plus, or equals symbol, i have to place the following in the pastResultsDisplay:
-            `${inputDisplayArray} ${binarySymbol}`
+let inputArray: string[] = [];
+let historyArray: string[] = [];
+let op1, op2;
+let lastOperator = "";
 
-    Similarly, if i press the same symbol (have to keep track of what was pressed last) twice in a row, i have to redo the function again
-            i.e.
-                   6 + 10 (= 16)
-                   I have to store (+ 10)
-                   so If I press + again, i should get 26 (16 + 10) (or 10 + 16, whatever is easier to implement)
+function processButtons(evt: Event) {
+  if (!(evt.target instanceof HTMLButtonElement)) return;
+  let input = evt.target.textContent;
+  if (!input) return;
 
-    We're treating all operations as binary operations, so 12 + 7 - 5 * 3 = 42, not 4!
-            explanation:
-                   ((12 + 7) - 5) * 3 = 42, not
-                   (12 + 7) - (5 * 3) = 4
+  switch (input) {
+    case "AC":
+      inputArray = [];
+      historyArray = [];
+      op1 = undefined;
+      op2 = undefined;
+      updateInputDisplay();
+      updateHistoryDisplay();
+      break;
+    case "C":
+      inputArray = [];
+      updateInputDisplay();
+      // Code for C button
+      break;
+    case "←":
+      inputArray.pop();
+      updateInputDisplay();
+      // Code for delete button
+      break;
+    case "÷":
+    case "×":
+    case "﹣":
+    case "+":
+      calculate(input);
+      lastOperator = input;
+      break;
+    case "=":
+      equals();
+      break;
+    case ".":
+    default:
+      updateInputDisplay(input);
+      break;
+  }
+}
 
-EXTRAs
-    Add keyboard support
-        remember that i have to event.preventDefault on a bunch of things, since certain symbols mean different things depending on the browsers
-            i.e. "/" is like the equivalent of ctrl+f
- */
+function calculate(operator: string) {
+  if (op1 === undefined) {
+    if (op2) {
+      op1 = op2;
+      op2 = undefined;
+    } else {
+      op1 = parseFloat(inputArray.join(""));
+    }
+    inputArray = [];
+    historyArray = [`${op1} ${operator}`];
+    updateInputDisplay();
+    updateHistoryDisplay();
+  } else {
+    op2 = parseFloat(inputArray.join(""));
+    let result = round(getResults(op1, op2, lastOperator));
+    historyArray = [`${result} ${operator}`];
+    inputArray = [result];
+    updateHistoryDisplay();
+    updateInputDisplay();
+    inputArray = [];
+    op1 = result;
+  }
+}
+
+function round(result) {
+  // Have to check if we have a result in sciNotation
+  let resultString = result.toString();
+
+  if (resultString.includes("e")) {
+    return toScientificNotation(result);
+  }
+
+  // We want a max of 9 characters, including the decimal
+  const decimalIndex = resultString.indexOf(".");
+
+  if (decimalIndex === -1) {
+    return resultString.length <= 9 ? result : toScientificNotation(result);
+  }
+
+  // If the decimal doesn't exist, we give ourselves another decimal place
+  const maxDecimalPlaces = 8 - decimalIndex;
+  let roundedResult = parseFloat(result.toFixed(maxDecimalPlaces));
+
+  resultString = roundedResult.toString();
+
+  if (resultString.length > 9) {
+    return toScientificNotation(roundedResult);
+  }
+
+  return roundedResult;
+}
+
+function toScientificNotation(number) {
+  let sciNotation = number.toExponential(4);
+
+  if (sciNotation.length > 9) {
+    sciNotation = number.toExponential(3);
+  }
+
+  return sciNotation;
+}
+
+function equals() {
+  op2 = parseFloat(inputArray.join(""));
+  let result = round(getResults(op1, op2, lastOperator));
+  historyArray = [`${op1} ${lastOperator} ${op2} =`];
+  inputArray = [result];
+  updateHistoryDisplay();
+  updateInputDisplay();
+  inputArray = [];
+  op2 = result;
+  op1 = undefined;
+}
+
+function getResults(a, b, operator) {
+  switch (operator) {
+    case "÷":
+      if (b === 0) return NaN;
+      return a / b;
+    case "×":
+      return a * b;
+    case "﹣":
+      return a - b;
+    case "+":
+      return a + b;
+  }
+}
+
+function updateInputDisplay(input?: string) {
+  if (inputArray.length > 8) return;
+  if (!inputDisplay) return;
+  if (input) inputArray.push(input);
+  inputDisplay.textContent =
+    inputArray.length === 0 ? "0" : inputArray.join("");
+}
+
+function updateHistoryDisplay() {
+  if (!historyDisplay) return;
+  historyDisplay.textContent = historyArray.join("");
+}
+
+updateInputDisplay();
