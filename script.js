@@ -4,9 +4,54 @@ const inputDisplay = document.querySelector("#inputDisplay");
 // prettier-ignore
 const historyDisplay = document.querySelector("#pastResultsDisplay");
 buttons?.addEventListener("click", processButtons);
+document.addEventListener("keydown", processKeys);
+function processKeys(evt) {
+    let key = evt.key;
+    if (key === "/") {
+        key = "÷";
+        evt.preventDefault();
+        calculate(key);
+        lastOperator = key;
+        return;
+    }
+    switch (key) {
+        case "0":
+        case "1":
+        case "2":
+        case "3":
+        case "4":
+        case "5":
+        case "6":
+        case "7":
+        case "8":
+        case "9":
+        case ".":
+            updateInputDisplay(key);
+            break;
+        case "+":
+        case "-":
+        case "*":
+        case "=":
+        case "Enter":
+            if (key === "Enter")
+                key = "=";
+            if (key === "-")
+                key = "﹣";
+            if (key === "*")
+                key = "×";
+            calculate(key);
+            lastOperator = key;
+            break;
+        case "Backspace":
+            // Assuming you have a function to handle backspace or delete
+            inputArray = [];
+            updateInputDisplay();
+            break;
+    }
+}
 let inputArray = [];
 let historyArray = [];
-let op1, op2;
+let operand1, operand2;
 let lastOperator = "";
 function processButtons(evt) {
     if (!(evt.target instanceof HTMLButtonElement))
@@ -16,12 +61,8 @@ function processButtons(evt) {
         return;
     switch (input) {
         case "AC":
-            inputArray = [];
-            historyArray = [];
-            op1 = undefined;
-            op2 = undefined;
-            updateInputDisplay();
-            updateHistoryDisplay();
+            resetParameters();
+            updateDisplay();
             break;
         case "C":
             inputArray = [];
@@ -37,11 +78,9 @@ function processButtons(evt) {
         case "×":
         case "﹣":
         case "+":
+        case "=":
             calculate(input);
             lastOperator = input;
-            break;
-        case "=":
-            equals();
             break;
         case ".":
         default:
@@ -49,30 +88,100 @@ function processButtons(evt) {
             break;
     }
 }
+// I'm going to explain my thoughts as to how we calculate items.
 function calculate(operator) {
-    if (op1 === undefined) {
-        if (op2) {
-            op1 = op2;
-            op2 = undefined;
+    /*
+        Should only be accessed if this is the first time we load the app, we've pressed AC, or we pressed
+        the "=" button
+     */
+    if (operand1 === undefined) {
+        /*
+            As calculate only performs a calculation when both operand1 and operand2 are defined, I purposefully
+            set operand1 as undefined whenever we press the "=" button, as just pressing another operator will
+            try and perform a computation with a null value, causing an error
+    
+            And since we had messed up the order "earlier" when we pressed "=", we have to reset them back
+            for formatting purposes. so it goes from (operand2 operator operand1) => (operand1 operator operand2)
+        */
+        if (operand2) {
+            operand1 = operand2;
+            operand2 = undefined;
         }
         else {
-            op1 = parseFloat(inputArray.join(""));
+            // this is our AC or first load entry point
+            operand1 = parseFloat(inputArray.join(""));
         }
         inputArray = [];
-        historyArray = [`${op1} ${operator}`];
-        updateInputDisplay();
-        updateHistoryDisplay();
+        historyArray = [`${operand1} ${operator}`];
+        updateDisplay();
     }
     else {
-        op2 = parseFloat(inputArray.join(""));
-        let result = round(getResults(op1, op2, lastOperator));
-        historyArray = [`${result} ${operator}`];
-        inputArray = [result];
-        updateHistoryDisplay();
-        updateInputDisplay();
+        operand2 = parseFloat(inputArray.join(""));
+        let result = round(getResults(operand1, operand2, lastOperator));
+        historyArray =
+            operator === "="
+                ? [`${operand1} ${lastOperator} ${operand2} =`]
+                : [`${result} ${operator}`];
+        inputArray = [result.toString()];
+        updateDisplay();
         inputArray = [];
-        op1 = result;
+        if (operator === "=") {
+            operand2 = +result;
+            operand1 = undefined;
+        }
+        else {
+            operand1 = +result;
+        }
     }
+}
+function getResults(a, b, operator) {
+    let result;
+    switch (operator) {
+        case "÷":
+            if (b === 0)
+                return NaN;
+            result = a / b;
+            break;
+        case "×":
+            result = a * b;
+            break;
+        case "﹣":
+            result = a - b;
+            break;
+        case "+":
+            result = a + b;
+            break;
+    }
+    if (!result)
+        return NaN;
+    return result;
+}
+function resetParameters() {
+    inputArray = [];
+    historyArray = [];
+    operand1 = undefined;
+    operand2 = undefined;
+}
+function updateDisplay() {
+    updateInputDisplay();
+    updateHistoryDisplay();
+}
+function updateInputDisplay(input) {
+    if (inputArray.length > 8)
+        return;
+    if (!inputDisplay)
+        return;
+    if (input === "." && inputArray.indexOf(".") !== -1)
+        return;
+    if (input)
+        inputArray.push(input);
+    inputDisplay.textContent =
+        inputArray.length === 0 ? "0" : inputArray.join("");
+}
+function updateHistoryDisplay() {
+    if (!historyDisplay)
+        return;
+    historyDisplay.textContent = historyArray.join("");
 }
 function round(result) {
     // Have to check if we have a result in sciNotation
@@ -100,45 +209,5 @@ function toScientificNotation(number) {
         sciNotation = number.toExponential(3);
     }
     return sciNotation;
-}
-function equals() {
-    op2 = parseFloat(inputArray.join(""));
-    let result = round(getResults(op1, op2, lastOperator));
-    historyArray = [`${op1} ${lastOperator} ${op2} =`];
-    inputArray = [result];
-    updateHistoryDisplay();
-    updateInputDisplay();
-    inputArray = [];
-    op2 = result;
-    op1 = undefined;
-}
-function getResults(a, b, operator) {
-    switch (operator) {
-        case "÷":
-            if (b === 0)
-                return NaN;
-            return a / b;
-        case "×":
-            return a * b;
-        case "﹣":
-            return a - b;
-        case "+":
-            return a + b;
-    }
-}
-function updateInputDisplay(input) {
-    if (inputArray.length > 8)
-        return;
-    if (!inputDisplay)
-        return;
-    if (input)
-        inputArray.push(input);
-    inputDisplay.textContent =
-        inputArray.length === 0 ? "0" : inputArray.join("");
-}
-function updateHistoryDisplay() {
-    if (!historyDisplay)
-        return;
-    historyDisplay.textContent = historyArray.join("");
 }
 updateInputDisplay();
